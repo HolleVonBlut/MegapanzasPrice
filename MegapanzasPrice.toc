@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: MegapanzasPrice
+## Notes: Escanea precios de consumibles para el Analizador HTML.
+## Author: Holle
+## SavedVariables: MegapanzasPriceDB
+MegapanzasPrice.lua
