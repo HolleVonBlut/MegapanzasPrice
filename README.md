@@ -8,7 +8,7 @@
 ---
 
 ## 📝 Descripción
-**Megapanzas** es un ecosistema de herramientas diseñado para auditar el consumo de una raid y cruzarlo con los precios reales del mercado. Combina un **Addon Lua** para el escaneo de la subasta y un **Analizador HTML** con gráficos dinámicos para la visualización de datos.
+**MegapanzasPrice** es un ecosistema de herramientas diseñado para auditar el consumo de una raid y cruzarlo con los precios reales del mercado. Combina un **Addon Lua** para el escaneo de la subasta y un **Analizador HTML** con gráficos dinámicos para la visualización de datos.
 
 ## 🛠 Instalación
 1. **Cierra el juego** completamente.
