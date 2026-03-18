@@ -13,7 +13,7 @@
 ## 🛠 Instalación
 1. **Cierra el juego** completamente.
 2. Copia la carpeta `MegapanzasPrice` dentro de:  
-   `World of Warcraft\Interface\AddOns\MegapanzasPrice\`.
+   `World of Warcraft\Interface\AddOns\`.
 3. Asegúrate de que el archivo `megapanzas_turtlewow_consumible_analyzer_v2.html` esté en la misma carpeta para fácil acceso.
 4. Alternativamente puedes simplemente copiar el enlace de github en el launcher de turtle wow.
 
