@@ -88,6 +88,18 @@
         color: #856404;
         font-style: italic;
     }
+    /* Clase para ítems sin precio (0 silver) */
+    .sin-precio {
+        color: #dc3545 !important;
+    }
+    .indicador-sin-precio {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        margin-left: 5px;
+    }
     </style>
 </head>
 <body>
@@ -349,10 +361,11 @@ function displayFullList() {
             const entries = Object.entries(p.consumables);
             if (entries.length > 0) {
                 html += '<ul>' + entries.sort((a, b) => b[1] - a[1]).map(([c, q]) => {
-                    // Verificar si el addon marcó este ítem como -1 (agotado)
                     const isOutOfStock = addonPrices && addonPrices[c.toLowerCase()] === -1;
                     const stockClass = isOutOfStock ? 'class="sin-stock"' : '';
-                    return isRealFlask(c) ? `<li ${stockClass} style="color: #1a6627;"><strong>⭐ ${c}: <b>${q}</b></strong></li>` : `<li ${stockClass}>${c}: <b>${q}</b></li>`;
+                    const price = consumablePrices[c.toLowerCase()] || 0;
+                    const sinPrecioIndicator = price === 0 ? '<span class="indicador-sin-precio" title="Precio no definido (0 silver)"></span>' : '';
+                    return isRealFlask(c) ? `<li ${stockClass} style="color: #1a6627;"><strong>⭐ ${c}: <b>${q}</b></strong>${sinPrecioIndicator}</li>` : `<li ${stockClass}>${c}: <b>${q}</b>${sinPrecioIndicator}</li>`;
                 }).join('') + '</ul>';
             } else {
                 html += '<p><i>Ningún consumible relevante.</i></p>';
@@ -590,13 +603,14 @@ function buildPriceEditor() {
         const key = c.toLowerCase().replace(/[^a-z0-9]/g, "_");
         const price = consumablePrices[c.toLowerCase()] || 0;
         
-        // Comprobar si está agotado según el addon
         const isOutOfStock = addonPrices && addonPrices[c.toLowerCase()] === -1;
         const rowClass = isOutOfStock ? 'class="sin-stock"' : '';
+        const sinPrecioClass = price === 0 ? 'class="sin-precio"' : '';
+        const sinPrecioIndicator = price === 0 ? '<span class="indicador-sin-precio" title="Precio no definido (0 silver)"></span>' : '';
 
         html += `
         <tr ${rowClass}>
-            <td>${toTitleCase(c)}</td>
+            <td ${sinPrecioClass}>${toTitleCase(c)}${sinPrecioIndicator}</td>
             <td><b>${price}</b></td>
             <td><input type="number" data-consumable="${c}" id="price_${key}" placeholder="Mantener: ${price}" style="width:140px"></td>
         </tr>`;
