@@ -2,7 +2,7 @@
 
 **Autor:** Holle (Addon & Interfaz)
 **Estructura Base:** SpaceSoul
-**Versión:** 1.0.5
+**Versión:** 2.0
 **Servidor:** Turtle WoW (WoW vanilla 1.12.1)
 
 ---
