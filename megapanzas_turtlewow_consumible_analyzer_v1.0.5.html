@@ -213,7 +213,7 @@ Warlock:"#9482C9",
     Paladin:"#F58CBA"
 }
 
-    const defaultConsumablePrices = { 'arcane elixir': 60, 'combat healing potion': 20, 'combat mana potion': 20, "danonzo's tel'abim delight": 80, "danonzo's tel'abim medley": 100, 'demonic rune': 200, 'dense sharpening stone': 100, 'dreamshard elixir': 200, 'dreamtonic': 120, 'elemental sharpening stone': 500, 'elixir of agility': 20, 'elixir of brute force': 300, 'elixir of detect lesser invisibility': 12, 'elixir of fortitude': 150, 'elixir of giant growth': 150, 'elixir of giants': 130, 'elixir of greater defense': 100, 'elixir of greater intellect': 70, 'elixir of shadow power': 200, 'elixir of superior defense': 260, 'elixir of the mongoose': 200, 'elixir of the sages': 150, 'fire protection potion': 180, 'flask of supreme power': 6000, 'flask of the titans': 6000, 'free action potion': 200, 'gift of arthas': 90, 'greater arcane elixir': 320, 'greater arcane protection potion': 130, 'greater fire protection potion': 200, 'greater mana potion': 50, 'gurubashi gumbo': 50, 'hardened mushroom': 1.2, 'le fishe au chocolat': 100, 'limited invulnerability potion': 125, 'major healing potion': 60, 'major mana potion': 1.75, 'mighty rage potion': 2.5, 'nightfin soup': 200, 'potion of quickness': 320, 'power mushroom': 80, 'restorative potion': 150, 'rumsey rum black label': 50, 'thistle tea': 20, 'winterfall firewater': 70, 'wizard oil': 300 };
+    const defaultConsumablePrices = { 'arcane elixir': 60, 'combat healing potion': 20, 'combat mana potion': 20, "Danonzo's tel'abim delight": 80, "Danonzo's tel'abim medley": 100, 'demonic rune': 200, 'dense sharpening stone': 100, 'dreamshard elixir': 200, 'dreamtonic': 120, 'elemental sharpening stone': 500, 'elixir of agility': 20, 'elixir of brute force': 300, 'elixir of detect lesser invisibility': 12, 'elixir of fortitude': 150, 'elixir of giant growth': 150, 'elixir of giants': 130, 'elixir of greater defense': 100, 'elixir of greater intellect': 70, 'elixir of shadow power': 200, 'elixir of superior defense': 260, 'elixir of the mongoose': 200, 'elixir of the sages': 150, 'fire protection potion': 180, 'flask of supreme power': 6000, 'flask of the titans': 6000, 'free action potion': 200, 'gift of arthas': 90, 'greater arcane elixir': 320, 'greater arcane protection potion': 130, 'greater fire protection potion': 200, 'greater mana potion': 50, 'gurubashi gumbo': 50, 'hardened mushroom': 1.2, 'le fishe au chocolat': 100, 'limited invulnerability potion': 125, 'major healing potion': 60, 'major mana potion': 1.75, 'mighty rage potion': 2.5, 'nightfin soup': 200, 'potion of quickness': 320, 'power mushroom': 80, 'restorative potion': 150, 'rumsey rum black label': 50, 'thistle tea': 20, 'winterfall firewater': 70, 'wizard oil': 300 };
     let consumablePrices = {...defaultConsumablePrices};
 
     document.getElementById('logFile').addEventListener('change', handleFileSelect);
@@ -228,9 +228,13 @@ Warlock:"#9482C9",
     
     document.getElementById('playerSearchInput').addEventListener('input', displaySinglePlayerData);
 
-    function toTitleCase(str) {
+    function normalizeItemName(str) {
         if (!str) return '';
-        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        // Reemplazar diferentes tipos de apostrofes por apostrofe estándar
+        return str.toLowerCase()
+            .replace(/'/g, "'")
+            .replace(/'/g, "'")
+            .replace(/'/g, "'");
     }
 
     function formatGold(silver) {
@@ -736,11 +740,19 @@ function applyHierarchy() {
 
     for (let item in addonPrices) {
         if (addonPrices[item] > 0) {
-            result[item] = addonPrices[item];
+            const normalizedItem = normalizeItemName(item);
+            // Verificar si el item normalizado existe en defaultConsumablePrices
+            if (defaultConsumablePrices[normalizedItem] !== undefined) {
+                result[normalizedItem] = addonPrices[item];
+            } else {
+                // Si no existe, agregar con el nombre normalizado
+                result[normalizedItem] = addonPrices[item];
+            }
         }
     }
     for (let item in manualPrices) {
-        result[item] = manualPrices[item];
+        const normalizedItem = normalizeItemName(item);
+        result[normalizedItem] = manualPrices[item];
     }
 
     consumablePrices = result;
