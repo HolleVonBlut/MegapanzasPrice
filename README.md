@@ -23,7 +23,7 @@
 El addon extrae la información económica directamente desde la Casa de Subastas (AH). Desarrollado íntegramente por **Holle**.
 
 ### Comandos de Chat
-* `/mp scan`: Inicia el escaneo automático de los 66+ consumibles.
+* `/mp`: Inicia el escaneo automático de los 66+ consumibles.
 
 ### ⚠️ Reglas Críticas de Escaneo
 * **Ventana de Subasta:** Debes mantener la ventana de la subasta **ABIERTA**. Si la cierras, el motor de WoW interrumpirá el proceso y los datos serán inconsistentes.
