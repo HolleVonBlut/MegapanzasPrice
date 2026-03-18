@@ -14,7 +14,8 @@
 1. **Cierra el juego** completamente.
 2. Copia la carpeta `MegapanzasPrice` dentro de:  
    `World of Warcraft\Interface\AddOns\MegapanzasPrice\`.
-3. Asegúrate de que el archivo `megapanzas_turtlewow_consumible_analyzer_v1.0.5.html` esté en la misma carpeta para fácil acceso.
+3. Asegúrate de que el archivo `megapanzas_turtlewow_consumible_analyzer_v2.html` esté en la misma carpeta para fácil acceso.
+4. Alternativamente puedes simplemente copiar el enlace de github en el launcher de turtle wow.
 
 ---
 
@@ -50,7 +51,7 @@ Herramienta web interactiva para visualizar los costos de la raid procesando los
 ### ⚙️ Jerarquía de Precios
 El sistema calcula el costo total siguiendo este orden de prioridad:
 1. **Precio Manual:** El valor que tú escribas directamente en el HTML.
-2. **Precio de Addon:** El valor recolectado con el comando `/mp scan`.
+2. **Precio de Addon:** El valor recolectado con el comando `/mp`.
 3. **Precio por Defecto:** Valores base preconfigurados en el código.
 
 ---
@@ -58,7 +59,7 @@ El sistema calcula el costo total siguiendo este orden de prioridad:
 ## 🔄 Guía de Sincronización
 
 ### Paso 1: En el Juego
-Abre la Subasta y usa el comando `/mp scan`. Al terminar, usa `/reload` para asegurar el guardado de la tabla.
+Abre la Subasta y usa el comando `/mp`. Al terminar, usa `/reload` para asegurar el guardado de la tabla.
 
 ### Paso 2: Localizar el Archivo
 Busca tu base de datos en la carpeta de tu cuenta:  
@@ -66,7 +67,7 @@ Busca tu base de datos en la carpeta de tu cuenta:
 
 ### Paso 3: Cargar en el HTML
 1. Abre el archivo `.html` en tu navegador.
-2. Carga tu **Log de combate** (`Wow.txt`).
+2. Carga tu **Log de combate** (`WoWCombatLog.txt`).
 3. Arrastra el archivo `MegapanzasPrice.lua` al recuadro de "Cargar Datos del Addon".
 
 ---
@@ -77,4 +78,4 @@ Busca tu base de datos en la carpeta de tu cuenta:
 * **Error de Lectura:** Verifica que el archivo de log no esté vacío y que la carpeta del addon se llame exactamente `MegapanzasPrice`.
 
 ---
-*Megapanzas v1.0.5 - Hecho con ❤️ para la comunidad de Turtle WoW* uwu/
+*MegapanzasPrice v2.0 - Hecho con ❤️ para la comunidad de Turtle WoW* uwu/
