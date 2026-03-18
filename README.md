@@ -20,7 +20,7 @@
 ---
 
 ## 🔌 El Addon: MegapanzasPrice
-El addon extrae la información económica directamente desde la Casa de Subastas (AH). Desarrollado íntegramente por **Holle**.
+El addon extrae la información económica directamente desde la Casa de Subastas (AH).
 
 ### Comandos de Chat
 * `/mp`: Inicia el escaneo automático de los 66+ consumibles.
