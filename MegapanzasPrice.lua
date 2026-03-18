@@ -4,7 +4,7 @@
 
 if not MegapanzasPriceDB then MegapanzasPriceDB = {} end
 
--- Lista extraída directamente de tu Analyzer HTML (66 ítems) + nuevos items
+-- Lista extraída directamente de tu Analyzer HTML + nuevos items sin Jujus
 local itemsToScan = {
     "Arcane Elixir", "Combat Healing Potion", "Combat Mana Potion",
     "Danonzo's Tel'abim Delight", "Danonzo's Tel'abim Medley", "Demonic Rune",
@@ -23,8 +23,7 @@ local itemsToScan = {
     "Rumsey Rum Black Label", "Thistle Tea", "Winterfall Firewater", "Wizard Oil",
     "Grilled Squid", "Smoked Desert Dumplings", "Dirge's Kickin' Chimaerok Chops",
     "Runn Tum Tubber", "Blessed Sunfruit", "Cerebral Cortex Compound",
-    "Gizzard Gum", "Ground Scorpok Assay", "Lung Juice Cocktail", "R.O.I.D.S.",
-    "Juju Flurry", "Juju Power", "Juju Might", "Juju Ember", "Juju Chill", "Juju Escape",
+    "Gizzard Gum", "Ground Scorpok Assay", "Lung Juice Cocktail",
     "Rumsey Rum Dark", "Kreeg's Stout Beatdown", "Savory Deviate Delight", "Noggenfogger Elixir",
     -- Greater Protection Potions
     "Greater Frost Protection Potion", "Greater Holy Protection Potion", 
@@ -38,7 +37,12 @@ local itemsToScan = {
     "Scroll of Protection IV", "Scroll of Stamina IV", "Scroll of Strength IV",
     "Scroll of Agility IV", "Scroll of Intellect IV", "Scroll of Spirit IV",
     -- Food Adicional
-    "Midsummer Sausage", "Crocolisk BBQ", "Dragonbreath Chili", "Heavy Kodo Stew"
+    "Midsummer Sausage", "Crocolisk BBQ", "Dragonbreath Chili", "Heavy Kodo Stew",
+    -- Nuevos agregados
+    "Greater Stoneshield Potion", "Blessed Wizard Oil", "Mageblood Potion",
+    "Flask of Distilled Wisdom", "Medivh's Merlot Blue", "Brilliant Mana Oil",
+    "Elixir of Greater Agility", "Medivh's Merlot", "Concoction of the Emerald Mongoose",
+    "Concoction of the Dreamwater", "Concoction of the Arcane Giant", "Elixir of Greater Firepower", "Elixir of Greater Nature Power", "Consecrated Sharpening Stone","Shadow power", "Goblin Sapper Charge", "Elixir of Poison Resistance"
 }
 
 local currentIndex = 1
@@ -49,6 +53,13 @@ local WAIT_TIME = 5.0
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
 frame:RegisterEvent("AUCTION_HOUSE_CLOSED")
+
+local function CleanString(str)
+    if not str then return "" end
+    str = string.lower(str)
+    -- Elimina cualquier caracter de puntuación, control o espacio (como apóstrofes)
+    return string.gsub(str, "[%p%c%s]", "")
+end
 
 local function GetTimestamp()
     return date("%Y%m%d%H%M")
@@ -72,13 +83,15 @@ local function ScanCurrentPage()
     if not isScanning then return end
     local batch = GetNumAuctionItems("list")
     local currentTarget = itemsToScan[currentIndex]
+    local targetClean = CleanString(currentTarget)
     local minBuyout = 0
     local foundAny = false
     
     if batch > 0 then
         for i = 1, batch do
             local name, _, stack, _, _, _, _, _, buyout = GetAuctionItemInfo("list", i)
-            if name == currentTarget and buyout > 0 then
+            -- Comparamos usando la limpieza de strings para evitar fallos por caracteres especiales
+            if name and CleanString(name) == targetClean and buyout > 0 then
                 foundAny = true
                 local pricePerUnit = buyout / stack
                 if minBuyout == 0 or pricePerUnit < minBuyout then
@@ -89,7 +102,12 @@ local function ScanCurrentPage()
     end
     
     local finalPrice = foundAny and math.floor(minBuyout) or -1
-    MegapanzasPriceDB.prices[string.lower(currentTarget)] = finalPrice
+    
+    -- Sincronización con el HTML: Normalizamos el nombre (ej: "Danonzo's" -> "danonzos")
+    local keyToSave = string.lower(currentTarget)
+    keyToSave = string.gsub(keyToSave, "danonzo's", "danonzos")
+    
+    MegapanzasPriceDB.prices[keyToSave] = finalPrice
 end
 
 frame:SetScript("OnEvent", function()

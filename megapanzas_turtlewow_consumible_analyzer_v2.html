@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Megapanzas TurtleWow Consumable Analyzer by Spacesoul, edit gui and add functions by holle</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 2em; background-color: #f4f4f9; color: #333; }
+    .container { max-width: 95%; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2, h3, h4 { color: #333; }
+        input[type="file"], input[type="text"] { padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: calc(100% - 22px); }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+        .tab-bar { border-bottom: 2px solid #ccc; margin-bottom: 20px; padding-bottom: 5px; }
+        .tab-button { background-color: #e9ecef; color: #495057; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+        .tab-button.active { background-color: #007bff; color: white; border-bottom: 2px solid #007bff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+
+        #fullListContainer { display: flex; flex-wrap: wrap; gap: 15px; }
+        .player-card { background: #fafafa; border: 1px solid #eee; border-radius: 5px; padding: 15px; box-sizing: border-box; flex-grow: 1; }
+        
+        @media (min-width: 1200px) { .player-card { flex-basis: calc(33.333% - 15px); } }
+        @media (min-width: 768px) and (max-width: 1199px) { .player-card { flex-basis: calc(50% - 15px); } }
+        @media (max-width: 767px) { .player-card { flex-basis: 100%; } }
+        
+        .player-card h3 { margin-top: 0; }
+        .player-card h4 { margin: 5px 0 10px; font-size: 0.95em; color: #555; font-weight: bold; }
+        .player-card ul { padding-left: 20px; margin-bottom: 0; }
+
+        @media print {
+            body, .container { margin: 0; padding: 0; box-shadow: none; width: 100%; }
+            body * { visibility: hidden; }
+            .container, #fullListView, #fullListView * { visibility: visible; }
+            #fullListView { position: absolute; left: 0; top: 0; width: 100%; }
+            #fullListContainer { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }
+            .player-card { visibility: visible !important; page-break-inside: avoid !important; border: 1px solid #ccc !important; flex-basis: calc(33% - 10px) !important; box-sizing: border-box !important; }
+            button, .tab-bar, h1, p, input, label { display: none !important; }
+             h2 { font-size: 16pt; text-align: center; }
+        }
+/* --- NUEVOS ESTILOS: ANALYZER MP --- */
+    .tutorial-box {
+        background-color: #f4f4f9;
+        border-left: 5px solid #007bff;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    .tutorial-box code {
+        background-color: #e2e2e2;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+    .load-section {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .status-box {
+        padding: 15px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    .action-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .action-btn:hover { background-color: #218838; }
+    
+    /* Clase para ítems sin stock (Identificador -1) */
+    .sin-stock {
+        background-color: #fff3cd !important; /* Amarillo suave */
+        color: #856404;
+        font-style: italic;
+    }
+    /* Clase para ítems sin precio (0 silver) */
+    .sin-precio {
+        color: #dc3545 !important;
+    }
+    .indicador-sin-precio {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        margin-left: 5px;
+    }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Megapanzas TurtleWow Consumable Analyzer by Spacesoul, edit gui and add functions by holle -</h4>
+    <p>Sube un fichero de log (.txt) para analizar el uso de consumibles por jugador.</p>
+    <div>
+        <label for="charName"><b>(Opcional)</b> Nombre de tu personaje (para logs con "You gain"):</label><br>
+        <input type="text" id="charName" placeholder="Déjalo en blanco si tu log ya tiene nombres">
+    </div>
+    <div>
+        <label for="logFile">Selecciona el fichero de log:</label><br>
+        <input type="file" id="logFile" accept=".txt">
+    </div>
+    <hr>
+<div class="tab-bar">
+<button class="tab-button active" onclick="showTab('dashboardView', event)">Dashboard General</button>
+<button class="tab-button" onclick="showTab('searchView', event)">Buscar por Jugador</button>
+<button class="tab-button" onclick="showTab('fullListView', event)">Listado Completo</button>
+<button class="tab-button" onclick="showTab('noFlaskView', event)">Jugadores Sin Flask</button>
+<button class="tab-button" onclick="showTab('rankingView', event); generateRankingChart();">Ranking Horizontal</button>
+<button class="tab-button" onclick="showTab('rankingVerticalView', event); generateVerticalRankingChart();">Ranking Vertical</button>
+<button class="tab-button" onclick="showTab('priceEditorView', event); buildPriceEditor();">Editar Precios</button>
+<button class="tab-button" id="tab-analyzer-mp" onclick="showTab('AnalyzerMP', event)">Analyzer MP</button>
+</div>
+    <div id="dashboardView" class="tab-content active"><div id="pivotTableContainer"><p><i>Esperando la carga de un archivo de log...</i></p></div></div>
+    <div id="searchView" class="tab-content">
+        <h2>Buscar Consumibles por Jugador</h2>
+        <input type="text" id="playerSearchInput" placeholder="Nombre del jugador..."><button onclick="displaySinglePlayerData()">Buscar</button>
+        <div id="singlePlayerResults"></div>
+    </div>
+    <div id="fullListView" class="tab-content">
+        <h2>Listado Completo por Jugador</h2>
+        <button onclick="saveState()">Guardar Estado (.json)</button><button onclick="exportToPDF()">Exportar a PDF</button>
+        <div id="fullListContainer"></div>
+    </div>
+    <div id="noFlaskView" class="tab-content">
+        <h2>Jugadores que no usaron Flask (excl. Diamond Flask)</h2>
+        <div id="noFlaskListContainer"></div>
+    </div>
+
+<div id="rankingView" class="tab-content">
+<h2>Ranking de Oro Gastado</h2>
+
+<button onclick="exportChartImage('rankingChart','ranking_horizontal.png')">
+Exportar Imagen
+</button>
+
+<canvas id="rankingChart"></canvas>
+</div>
+
+<div id="rankingVerticalView" class="tab-content">
+<h2>Ranking de Oro Gastado (Vertical)</h2>
+
+<button onclick="exportChartImage('rankingChartVertical','ranking_vertical.png')">
+Exportar Imagen
+</button>
+
+<canvas id="rankingChartVertical" style="max-height:400px;"></canvas>
+</div>
+
+<div id="priceEditorView" class="tab-content">
+    <h2>Editor de Precios de Consumibles</h2>
+    <p>Ingresa el precio en <b>silver</b>. Solo edita los que quieras cambiar, <b>el resto mantendrá su precio actual cargado</b>.</p>
+    <button onclick="loadCustomPrices()" style="background-color: #28a745;">Guardar y Aplicar Precios</button>
+    <button onclick="resetDefaultPrices()" style="background-color: #dc3545;">Restaurar Default</button>
+    <div id="priceEditorContainer"></div>
+</div>
+<div id="AnalyzerMP" class="tab-content">
+    <h2>Sincronización con Addon (MegapanzasPrice)</h2>
+    
+<div class="tutorial-box">
+        <h3>📖 Cómo actualizar la data</h3>
+        <p>1. En el juego, abre la subasta.<br>
+           2. Escribe <code>/mp</code> y espera a que termine (66 objetos).<br>
+           3. Escribe <code>/reload</code> para salvar los datos en el archivo.</p>
+        <p>📥 <a href="https://github.com/HolleVonBlut/MegapanzasPrice" target="_blank" style="font-weight: bold; color: #0056b3;">Descargar Addon MegapanzasPrice desde GitHub</a></p>
+    </div>
+
+    <div class="load-section">
+        <h3>⚙️ Cargar Archivo .lua</h3>
+        <p>Selecciona tu archivo en: <code>WoW\WTF\Account\TU_CUENTA\SavedVariables\MegapanzasPrice.lua</code></p>
+        <input type="file" id="file-upload-manual" accept=".lua">
+    </div>
+
+    <div class="status-box" id="sync-status">
+        <p>Estado: <span id="status-text" style="color: #dc3545;">Sin Sincronizar</span></p>
+        <p>Última actualización: <span id="last-update-text">Ninguna</span></p>
+        <button id="btn-clear-manual" style="background-color: #ffc107; color: black; display: none;">Limpiar Cambios Manuales</button>
+    </div>
+</div>
+</div>
+
+<script>
+let pivotData = null;
+let playerData = null;
+let playerClasses = {};
+let rankingChartInstance = null;
+let rankingChartVerticalInstance = null;
+
+const classColors = {
+    Warrior:"#C79C6E",
+    Mage:"#69CCF0",
+    Rogue:"#FFF569",
+    Druid:"#FF7D0A",
+    Hunter:"#ABD473",
+    Shaman:"#0070DE",
+    Priest:"#FFFFFF",
+Warlock:"#9482C9",
+    Paladin:"#F58CBA"
+}
+
+    const defaultConsumablePrices = { 'arcane elixir': 60, 'combat healing potion': 20, 'combat mana potion': 20, "Danonzo's tel'abim delight": 80, "Danonzo's tel'abim medley": 100, 'demonic rune': 200, 'dense sharpening stone': 100, 'dreamshard elixir': 200, 'dreamtonic': 120, 'elemental sharpening stone': 500, 'elixir of agility': 20, 'elixir of brute force': 300, 'elixir of detect lesser invisibility': 12, 'elixir of fortitude': 150, 'elixir of giant growth': 150, 'elixir of giants': 130, 'elixir of greater defense': 100, 'elixir of greater intellect': 70, 'elixir of shadow power': 200, 'elixir of superior defense': 260, 'elixir of the mongoose': 200, 'elixir of the sages': 150, 'fire protection potion': 180, 'flask of supreme power': 6000, 'flask of the titans': 6000, 'free action potion': 200, 'gift of arthas': 90, 'greater arcane elixir': 320, 'greater arcane protection potion': 130, 'greater fire protection potion': 200, 'greater mana potion': 50, 'gurubashi gumbo': 50, 'hardened mushroom': 1.2, 'le fishe au chocolat': 100, 'limited invulnerability potion': 125, 'major healing potion': 60, 'major mana potion': 1.75, 'mighty rage potion': 2.5, 'nightfin soup': 200, 'potion of quickness': 320, 'power mushroom': 80, 'restorative potion': 150, 'rumsey rum black label': 50, 'thistle tea': 20, 'winterfall firewater': 70, 'wizard oil': 300 };
+    let consumablePrices = {...defaultConsumablePrices};
+
+    document.getElementById('logFile').addEventListener('change', handleFileSelect);
+    document.getElementById('charName').addEventListener('input', handleFileSelect);
+
+    function showTab(tabId, event) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+    
+    document.getElementById('playerSearchInput').addEventListener('input', displaySinglePlayerData);
+
+function normalizeItemName(str) {
+        if (!str) return '';
+        let normalized = str.toLowerCase();
+        
+        // 1. Traducir nombres del LOG al nombre de la SUBASTA
+        if (normalized.includes("medivh's merlot blue label")) {
+            normalized = "medivh's merlot blue";
+        }
+        
+        // 2. Eliminar apóstrofes y símbolos para evitar errores de Medivh's vs Medivhs
+        return normalized.replace(/[’'’`´]/g, "");
+    }
+
+    function toTitleCase(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    function formatGold(silver) {
+        if (!silver) return '0.00';
+        return (silver / 100).toFixed(2);
+    }
+
+    function handleFileSelect() {
+        const file = document.getElementById('logFile').files[0];
+        if (!file) return;
+        const charName = document.getElementById('charName').value.trim();
+        const reader = new FileReader();
+        reader.onload = e => processLog(e.target.result, charName);
+        reader.readAsText(file);
+    }
+    
+    function processLog(logContent, charName) {
+        pivotData = {};
+        playerData = {};
+        playerClasses = {};
+        const allPlayersInLog = new Set();
+        const lines = logContent.split('\n');
+        const logContentLower = logContent.toLowerCase();
+
+        const raidStartKeywords = [ "blackwing lair", "molten core", "emerald sanctum", "lower karazhan", "caverns of time: black morass", "karazhan crypt", "stormwind vault", "hateforge quarry", "ahn'qiraj", "ahnqiraj", "naxxramas", "onyxia", "zul'gurub", "zulgurub"];
+        
+        let isCountingEnabled = !raidStartKeywords.some(keyword => logContentLower.includes(keyword));
+
+        const gainRegex = new RegExp(`\\bYou gain\\b`, 'gi');
+        const usesRegex = /\s*([a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)\s+uses\s+(.+)/i;
+        const gainsRegex = /\s*([a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)\s+gains\s+([^()]+)/i;
+        const onRegex = /\s+on\s+.*$/i;
+        
+        // --- FIX v1.0.5: Keywords for self-use items whose "gains" line should be ignored to prevent double counts ---
+        const selfUseGainKeywordsToIgnore = [ "flask", "potion", "elixir", "firewater", "rum", "juju", "sharpening stone", "weightstone", "wizard oil", "mana oil", "gumbo", "merlot", "soup", "tea", "mushroom", "melon", "delight", "medley"];
+        
+        const consumableGainWhitelist = [ "flask", "elixir", "potion", "juju", "firewater", "rumsey", "blessed sunfruit", "dragonbreath", "scorpok", "ground scorpok", "rage of ages", "spirit of boar", "health ii", "greater armor", "dreamshard", "dreamtonic", "elemental sharpening stone", "dense sharpening stone", "dense weightstone", "wizard oil", "mana oil", "invisibility", "shadow power", "supreme power", "distilled wisdom" ];
+
+        lines.forEach(line => {
+            const lineLower = line.toLowerCase();
+
+            if (line.includes('COMBATANT_INFO')) {
+                const parts = line.split('&');
+                if (parts.length > 2) playerClasses[parts[1].toLowerCase()] = toTitleCase(parts[2]);
+            }
+            
+            if (!isCountingEnabled) {
+                if (raidStartKeywords.some(keyword => lineLower.includes(keyword))) {
+                    isCountingEnabled = true;
+                }
+            }
+            
+            if (!isCountingEnabled || lineLower.includes('receives loot') || lineLower.includes('creates:')) {
+                return;
+            }
+
+            let processedLine = charName ? line.replace(gainRegex, `${charName} gains`) : line;
+            let jugador, consumible;
+            let matchUses = processedLine.match(usesRegex);
+            let matchGains = processedLine.match(gainsRegex);
+
+if (matchUses) {
+    jugador = matchUses[1].toLowerCase();
+    consumible = normalizeItemName(matchUses[2].trim().replace(/\.$/, '').replace(onRegex, ''));
+} else if (matchGains) {
+                let potentialConsumible = matchGains[2].trim().toLowerCase();
+                
+                // --- FIX v1.0.5: Check if the "gains" line is for a self-use item. If so, skip it. ---
+                const isSelfUseRedundant = selfUseGainKeywordsToIgnore.some(keyword => potentialConsumible.includes(keyword));
+
+if (!isSelfUseRedundant && consumableGainWhitelist.some(keyword => potentialConsumible.includes(keyword))) {
+    jugador = matchGains[1].toLowerCase();
+    consumible = normalizeItemName(matchGains[2].trim());
+}
+            }
+
+            if (jugador && consumible) {
+                allPlayersInLog.add(jugador);
+                if (!playerData[jugador]) playerData[jugador] = {};
+                playerData[jugador][consumible] = (playerData[jugador][consumible] || 0) + 1;
+                if (!pivotData[consumible]) pivotData[consumible] = {};
+                pivotData[consumible][jugador] = (pivotData[consumible][jugador] || 0) + 1;
+            }
+        });
+        
+        allPlayersInLog.forEach(p => { if (!playerData[p]) playerData[p] = {}; });
+        displayPivotTable();
+        displayFullList();
+        displayNoFlaskList();
+        document.getElementById('singlePlayerResults').innerHTML = '';
+        document.getElementById('playerSearchInput').value = '';
+    }
+
+    function isRealFlask(consumableName) {
+        const lowerCaseName = consumableName.toLowerCase();
+        return lowerCaseName.includes('flask') && !lowerCaseName.includes('diamond flask');
+    }
+
+function displayFullList() {
+        const container = document.getElementById('fullListContainer');
+        container.innerHTML = '';
+        if (!playerData) { container.innerHTML = '<p>No hay datos.</p>'; return; }
+        
+        // Agregar la leyenda
+        let leyendaHTML = '<p style="margin-bottom: 15px; font-size: 0.9em;"><i><span style="background-color: #fff3cd; padding: 2px 5px; border: 1px solid #ffeeba;">Amarillo:</span> Ítems agotados o no existentes en la subasta (usando precio por defecto o "0 silver").</i></p>';
+        
+        const excludedConsumables = ["conjured crystal water", "morning glory dew", "moll-e, remote mail terminal", "gargantuan tel'abim banana", "goblin brainwashing device", "ripe tel'abim banana"];
+        const playerArray = Object.entries(playerData).map(([name, consumables]) => {
+            const filteredConsumables = Object.fromEntries(Object.entries(consumables).filter(([c]) => !excludedConsumables.includes(c.toLowerCase())));
+            const hasUsedFlask = Object.keys(consumables).some(c => isRealFlask(c));
+const totalCostInSilver = Object.entries(filteredConsumables).reduce((acc, [c, q]) => {
+    const normalizedC = normalizeItemName(c);
+    const price = consumablePrices[normalizedC] || 0;
+    return acc + (price * q);
+}, 0);
+            return { name, total: Object.values(filteredConsumables).reduce((a,b)=>a+b,0), consumables: filteredConsumables, hasUsedFlask, totalCostInSilver };
+        });
+
+        playerArray.sort((a, b) => b.totalCostInSilver - a.totalCostInSilver);
+
+        let html = leyendaHTML;
+        playerArray.forEach(p => {
+            html += `<div class="player-card">`;
+            const playerClass = playerClasses[p.name] || 'Desconocida';
+            let nameDisplay = `${toTitleCase(p.name)} (Total: ${p.total}) / Clase: ${playerClass}`;
+            html += p.hasUsedFlask ? `<h3><span style="color: #1a6627;">⭐ ${nameDisplay}</span></h3>` : `<h3>${nameDisplay}</h3>`;
+            html += `<h4>💰 Oro gastado: ${formatGold(p.totalCostInSilver)} gold</h4>`;
+            
+            const entries = Object.entries(p.consumables);
+            if (entries.length > 0) {
+                html += '<ul>' + entries.sort((a, b) => b[1] - a[1]).map(([c, q]) => {
+                    const isOutOfStock = addonPrices && addonPrices[c.toLowerCase()] === -1;
+                    const stockClass = isOutOfStock ? 'class="sin-stock"' : '';
+ const price = consumablePrices[normalizeItemName(c)] || 0;
+                    const sinPrecioIndicator = price === 0 ? '<span class="indicador-sin-precio" title="Precio no definido (0 silver)"></span>' : '';
+                    return isRealFlask(c) ? `<li ${stockClass} style="color: #1a6627;"><strong>⭐ ${c}: <b>${q}</b></strong>${sinPrecioIndicator}</li>` : `<li ${stockClass}>${c}: <b>${q}</b>${sinPrecioIndicator}</li>`;
+                }).join('') + '</ul>';
+            } else {
+                html += '<p><i>Ningún consumible relevante.</i></p>';
+            }
+            html += `</div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function displayPivotTable() {
+        const container = document.getElementById('pivotTableContainer');
+        if (!pivotData || Object.keys(pivotData).length === 0) { container.innerHTML = '<p>No se encontraron datos de consumibles.</p>'; return; }
+        const allConsumibles = Object.keys(pivotData).sort(), allJugadores = Array.from(Object.keys(playerData)).sort();
+        let table = '<table><thead><tr><th>Consumible</th>' + allJugadores.map(j => `<th>${toTitleCase(j)}</th>`).join('') + '</tr></thead><tbody>';
+        allConsumibles.forEach(c => { table += `<tr><td>${c}</td>` + allJugadores.map(j => `<td>${(pivotData[c] && pivotData[c][j]) || 0}</td>`).join('') + '</tr>'; });
+        container.innerHTML = table + '</tbody></table>';
+    }
+    function displaySinglePlayerData() {
+        const container = document.getElementById('singlePlayerResults'), playerName = document.getElementById('playerSearchInput').value.trim().toLowerCase();
+        if (!playerData) { container.innerHTML = '<p>Carga un log primero.</p>'; return; }
+        if (!playerName) { container.innerHTML = '<p>Ingresa un nombre para buscar.</p>'; return; }
+        const data = playerData[playerName];
+        if (!data) { container.innerHTML = `<p>No se encontraron datos para: <b>${toTitleCase(playerName)}</b>.</p>`; return; }
+        const consumibles = Object.entries(data);
+        if (consumibles.length === 0) { container.innerHTML = `<p><b>${toTitleCase(playerName)}</b> no utilizó consumibles.</p>`; return; }
+        let list = `<h3>Consumibles de ${toTitleCase(playerName)}:</h3><ul>` + consumibles.sort((a, b) => b[1] - a[1]).map(([c, q]) => `<li>${c}: <b>${q}</b></li>`).join('') + '</ul>';
+        container.innerHTML = list;
+    }
+    function displayNoFlaskList() {
+        const container = document.getElementById('noFlaskListContainer');
+        if (!playerData) { container.innerHTML = '<p>No hay datos.</p>'; return; }
+        const playersWithoutFlask = Object.entries(playerData).filter(([_, c]) => !Object.keys(c).some(i => isRealFlask(i))).map(([name]) => name).sort();
+        if (playersWithoutFlask.length > 0) {
+            container.innerHTML = '<ul>' + playersWithoutFlask.map(name => `<li>${toTitleCase(name)}${playerClasses[name] ? ` / ${playerClasses[name]}` : ''}</li>`).join('') + '</ul>';
+        } else { container.innerHTML = '<p><i>Todos los jugadores utilizaron al menos un flask.</i></p>'; }
+    }
+    function saveState() {
+        if (!playerData) { alert("No hay datos para guardar."); return; }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ playerData, playerClasses }, null, 2));
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr); a.setAttribute("download", "consumable_analysis.json");
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+    function exportToPDF() {
+        if (!playerData) { alert("No hay datos para exportar."); return; }
+        window.print();
+    }
+function exportChartImage(canvasId,filename){
+
+    const canvas = document.getElementById(canvasId)
+
+    const link = document.createElement("a")
+
+    link.href = canvas.toDataURL("image/png")
+
+    link.download = filename
+
+    link.click()
+}
+function generateRankingChart(){
+
+    if(!playerData) return;
+
+    const ranking = Object.entries(playerData).map(([name, consumables])=>{
+
+        const totalCost = Object.entries(consumables).reduce((acc,[c,q])=>{
+const price = consumablePrices[normalizeItemName(c)] || 0
+            return acc + price*q
+        },0)
+
+        return {name,totalCost}
+
+    }).sort((a,b)=>b.totalCost-a.totalCost)
+
+    const labels = ranking.map((p,i)=>`#${i+1} ${toTitleCase(p.name)}`)
+    const values = ranking.map(p=>p.totalCost/100)
+
+const colors = ranking.map(p=>{
+    const playerClass = playerClasses[p.name]
+    return classColors[playerClass] || "#888888"
+})
+
+const ctx = document.getElementById("rankingChart").getContext("2d")
+
+    if(rankingChartInstance){
+        rankingChartInstance.destroy()
+    }
+
+    rankingChartInstance = new Chart(ctx,{
+        type:"bar",
+        data:{
+            labels:labels,
+            datasets:[{
+                label:"Gold Gastado",
+                data:values,
+                backgroundColor:colors
+            }]
+        },
+        options:{
+            indexAxis:"y",
+            responsive:true,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label:(ctx)=>ctx.raw.toFixed(2)+" gold"
+                    }
+                }
+            },
+            scales:{
+                x:{
+                    title:{display:true,text:"Gold"}
+                }
+            }
+        }
+    })
+}
+function generateVerticalRankingChart(){
+
+    if(!playerData) return;
+
+    const ranking = Object.entries(playerData).map(([name, consumables])=>{
+
+        const totalCost = Object.entries(consumables).reduce((acc,[c,q])=>{
+const price = consumablePrices[normalizeItemName(c)] || 0
+            return acc + price*q
+        },0)
+
+        return {name,totalCost}
+
+    }).sort((a,b)=>b.totalCost-a.totalCost)
+
+    const labels = ranking.map(p=>toTitleCase(p.name))
+    const values = ranking.map(p=>p.totalCost/100)
+
+const colors = ranking.map(p=>{
+    const playerClass = playerClasses[p.name]
+    return classColors[playerClass] || "#888888"
+})
+
+const ctx = document.getElementById("rankingChartVertical").getContext("2d")
+
+    if(rankingChartVerticalInstance){
+        rankingChartVerticalInstance.destroy()
+    }
+
+rankingChartVerticalInstance = new Chart(ctx,{
+        type:"bar",
+        data:{
+            labels:labels,
+            datasets:[{
+                label:"Gold gastado",
+                data:values,
+                backgroundColor:colors
+            }]
+        },
+        plugins:[{
+            id:"valueLabels",
+            afterDatasetsDraw(chart){
+
+                const {ctx} = chart
+
+                chart.data.datasets.forEach((dataset,i)=>{
+
+                    const meta = chart.getDatasetMeta(i)
+
+                    meta.data.forEach((bar,index)=>{
+
+                        const value = dataset.data[index]
+
+                        ctx.fillStyle = "#000"
+
+                        ctx.font = "12px sans-serif"
+
+                        ctx.textAlign = "center"
+
+                        ctx.fillText(
+                            value.toFixed(1)+"g",
+                            bar.x,
+                            bar.y-5
+                        )
+
+                    })
+
+                })
+
+            }
+        }],
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label:(ctx)=>ctx.raw.toFixed(1)+" gold"
+                    }
+                }
+            },
+            scales:{
+                x:{
+                    ticks:{
+                        maxRotation:45,
+                        minRotation:45
+                    }
+                },
+                y:{
+                    title:{
+                        display:true,
+                        text:"Gold"
+                    }
+                }
+}
+        }
+    })
+}
+
+function buildPriceEditor() {
+    const container = document.getElementById("priceEditorContainer");
+    if (!playerData) { 
+        container.innerHTML = "<p><i>Primero debes cargar un archivo de log para generar la lista de consumibles usados en la raid.</i></p>"; 
+        return; 
+    }
+
+    let leyendaHTML = '<p style="margin-bottom: 15px; font-size: 0.9em;"><i><span style="background-color: #fff3cd; padding: 2px 5px; border: 1px solid #ffeeba;">Fila Amarilla:</span> Ítem sin existencias en la subasta (se muestra precio por defecto).</i></p>';
+
+    const allConsumables = new Set();
+    Object.values(playerData).forEach(player => {
+        Object.keys(player).forEach(c => allConsumables.add(c));
+    });
+
+    const list = Array.from(allConsumables).sort();
+    let html = leyendaHTML + "<table><tr><th>Consumible</th><th>Precio Actual (Silver)</th><th>Nuevo Precio (Opcional)</th></tr>";
+
+    list.forEach(c => {
+        const key = c.toLowerCase().replace(/[^a-z0-9]/g, "_");
+const price = consumablePrices[normalizeItemName(c)] || 0;
+        
+        const isOutOfStock = addonPrices && addonPrices[c.toLowerCase()] === -1;
+        const rowClass = isOutOfStock ? 'class="sin-stock"' : '';
+        const sinPrecioClass = price === 0 ? 'class="sin-precio"' : '';
+        const sinPrecioIndicator = price === 0 ? '<span class="indicador-sin-precio" title="Precio no definido (0 silver)"></span>' : '';
+
+        html += `
+        <tr ${rowClass}>
+            <td ${sinPrecioClass}>${toTitleCase(c)}${sinPrecioIndicator}</td>
+            <td><b>${price}</b></td>
+            <td><input type="number" data-consumable="${c}" id="price_${key}" placeholder="Mantener: ${price}" style="width:140px"></td>
+        </tr>`;
+    });
+
+    html += "</table>";
+    container.innerHTML = html;
+}
+
+function loadCustomPrices() {
+    const inputs = document.querySelectorAll("#priceEditorContainer input");
+    let cambios = 0;
+    
+    inputs.forEach(input => {
+        const consumable = input.dataset.consumable;
+        const value = parseFloat(input.value);
+        
+        // Si hay un valor numérico escrito, lo actualiza. Si está en blanco, ignora y mantiene el actual.
+        if (!isNaN(value)) {
+            consumablePrices[consumable.toLowerCase()] = value;
+            cambios++;
+        }
+    });
+
+    if (cambios > 0) {
+        alert("Se han actualizado " + cambios + " precios. Los demás se mantienen sin cambios. Regenerando vistas...");
+        displayFullList(); 
+        buildPriceEditor(); // Refresca la tabla para mostrar los nuevos "Precios Actuales"
+    } else {
+        alert("No ingresaste ningún precio nuevo. Se mantienen los valores actuales.");
+    }
+}
+
+function resetDefaultPrices() {
+    if(confirm("¿Estás seguro de que quieres restaurar todos los consumibles a sus precios por defecto?")) {
+        consumablePrices = {...defaultConsumablePrices};
+        alert("Precios restaurados exitosamente.");
+        if(playerData) {
+            displayFullList();
+            buildPriceEditor();
+        }
+    }
+}
+
+// --- LÓGICA DE SINCRONIZACIÓN ANALYZER MP ---
+let addonPrices = {}; 
+let manualPrices = JSON.parse(localStorage.getItem('mp_manual_prices')) || {}; 
+
+// Intentar cargar datos previos del navegador al abrir la web
+window.addEventListener('load', () => {
+    const savedAddon = localStorage.getItem('mp_addon_prices');
+    if (savedAddon) {
+        addonPrices = JSON.parse(savedAddon);
+        updateSyncUI("complete", localStorage.getItem('mp_last_update'));
+        applyHierarchy();
+    }
+});
+
+// Escuchar la subida del archivo .lua
+document.getElementById('file-upload-manual').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        
+        // Verificar si el escaneo está incompleto
+        const statusMatch = content.match(/\["?status"?\]\s*=\s*"?([^",\s]+)"?/i);
+        if (statusMatch && statusMatch[1].toLowerCase() === 'incomplete') {
+            alert("⚠️ El archivo seleccionado tiene estado INCOMPLETO.\n\n" +
+                  "El addon no terminó de escanear todos los consumibles.\n" +
+                  "Por favor, ejecuta /mp en el juego y espera a que finalice el escaneo.\n" +
+                  "Porfavor manten la subasta en primer plano en todo momento, no interactues con nada mas mientras se realiza el escaneo");
+            e.target.value = ''; // Limpiar input
+            return;
+        }
+        
+        // Regex para capturar los precios dentro de la tabla del addon
+        const priceRegex = /\["([^"]+)"\] = (-?\d+)/g;
+        let match;
+        let found = false;
+        let newPrices = {};
+
+        while ((match = priceRegex.exec(content)) !== null) {
+            const item = match[1].toLowerCase();
+            const rawPrice = parseFloat(match[2]);
+            
+            if (item !== "status" && item !== "last_update") {
+                newPrices[item] = rawPrice === -1 ? -1 : (rawPrice / 100);
+                found = true;
+            }
+        }
+
+        if (found) {
+            addonPrices = newPrices;
+            const now = new Date().toLocaleString();
+            localStorage.setItem('mp_addon_prices', JSON.stringify(addonPrices));
+            localStorage.setItem('mp_last_update', now);
+            updateSyncUI("complete", now);
+            applyHierarchy();
+            alert("¡Data de MegapanzasPrice cargada!");
+        } else {
+            alert("No se encontraron precios en el archivo. ¿Hiciste /mp y /reload en el juego?");
+        }
+    };
+    reader.readAsText(file);
+});
+
+function updateSyncUI(status, time) {
+    const st = document.getElementById('status-text');
+    const ut = document.getElementById('last-update-text');
+    if (st && ut) {
+        st.innerText = "Sincronizado con Addon";
+        st.style.color = "#28a745";
+        ut.innerText = time;
+    }
+}
+
+function applyHierarchy() {
+    // Orden: Default -> Addon (si no es -1) -> Manual
+    let result = {...defaultConsumablePrices};
+
+    for (let item in addonPrices) {
+        if (addonPrices[item] > 0) {
+            const normalizedItem = normalizeItemName(item);
+            // Verificar si el item normalizado existe en defaultConsumablePrices
+            if (defaultConsumablePrices[normalizedItem] !== undefined) {
+                result[normalizedItem] = addonPrices[item];
+            } else {
+                // Si no existe, agregar con el nombre normalizado
+                result[normalizedItem] = addonPrices[item];
+            }
+        }
+    }
+    for (let item in manualPrices) {
+        const normalizedItem = normalizeItemName(item);
+        result[normalizedItem] = manualPrices[item];
+    }
+
+    consumablePrices = result;
+
+    // Refrescar las tablas si hay un log cargado
+    if (playerData) {
+        displayFullList();
+        if (document.getElementById('priceEditorView').classList.contains('active')) {
+            buildPriceEditor();
+        }
+    }
+}
+
+// Integrar con tu función de guardar manual (Sobrescribir la original)
+const originalLoadCustomPrices = loadCustomPrices;
+loadCustomPrices = function() {
+    const inputs = document.querySelectorAll("#priceEditorContainer input");
+    inputs.forEach(input => {
+        const item = input.dataset.consumable.toLowerCase();
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) manualPrices[item] = val;
+    });
+    localStorage.setItem('mp_manual_prices', JSON.stringify(manualPrices));
+    applyHierarchy();
+    alert("Precios manuales guardados (prioridad máxima).");
+};
+
+</script>
+
+</body>
+</html>
