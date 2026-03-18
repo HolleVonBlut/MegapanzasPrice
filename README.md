@@ -1,4 +1,4 @@
-# Megapanzas - Turtle WoW 1.12
+# MegapanzasPrice - Turtle WoW 1.12
 
 **Autor:** Holle (Addon & Interfaz)
 **Estructura Base:** SpaceSoul
